@@ -16,6 +16,7 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import InvitationScreen from '../screens/InvitationScreen';
 import UserSearchScreen from '../screens/UserSearchScreen';
+import FavoriteScreen from '../screens/FavoriteScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -244,7 +245,31 @@ const FeedStack = ({ navigation }) => (
       component={ChatScreen}
       options={({ route }) => ({
         title: route.params.userName,
-        headerBackTitleVisible: false,
+        headerTitleAlign: 'center',
+        headerTitleStyle: {
+          color: 'white',
+          fontSize: 20,
+          fontWeight: 'bold'
+        },
+        headerLeft: () => (
+          <View style={{ marginLeft: 10 }}>
+            <Ionicons
+              name="home-outline"
+              size={40}
+              color="white"
+              onPress={() => navigation.navigate('HomePage')}
+            />
+          </View>
+        ),
+        headerRight: () => (
+          <View style={{ marginRight: 10 }}>
+            <Ionicons
+              name="mail-outline"
+              size={40}
+              color="#1b9b9b"
+            />
+          </View>
+        ),
       })}
     />
   </Stack.Navigator>
@@ -252,6 +277,29 @@ const FeedStack = ({ navigation }) => (
 
 const SearchStack = ({ navigation }) => (
   <Stack.Navigator>
+    <Stack.Screen
+      name="AddPost"
+      component={AddPostScreen}
+      options={{
+        headerTitle: "POST",
+        headerTitleAlign: 'center',
+        headerTitleStyle: {
+          color: 'white',
+          fontSize: 20,
+          fontWeight: 'bold'
+        },
+        headerLeft: () => (
+          <View style={{ marginLeft: 10 }}>
+            <Ionicons
+              name="arrow-back"
+              size={30}
+              color="white"
+              onPress={() => navigation.navigate('HomePage')}
+            />
+          </View>
+        ),
+      }}
+    />
   </Stack.Navigator>
 );
 
@@ -293,7 +341,39 @@ const PostStack = ({ navigation }) => (
 );
 
 const FavoriteStack = ({ navigation }) => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      headerStyle: {
+        backgroundColor: '#ed297b',
+      },
+      headerTitleStyle: {
+        height: 50,
+        fontWeight: 'bold',
+      },
+    }}>
+    <Stack.Screen
+      name="FavoritePage"
+      component={FavoriteScreen}
+      options={{
+        headerTitle: "FAVORITE",
+        headerTitleAlign: 'center',
+        headerTitleStyle: {
+          color: 'white',
+          fontSize: 20,
+          fontWeight: 'bold'
+        },
+        headerLeft: () => (
+          <View style={{ marginLeft: 10 }}>
+            <Ionicons
+              name="arrow-back"
+              size={30}
+              color="white"
+              onPress={() => navigation.navigate('HomePage')}
+            />
+          </View>
+        ),
+      }}
+    />
   </Stack.Navigator>
 );
 
@@ -327,6 +407,7 @@ const AppStack = () => {
         options={({ route }) => ({
           tabBarVisible: getTabBarVisibility(route),
           tabBarLabel: 'Home',
+          unmountOnBlur: true,
           // tabBarVisible: route.state && route.state.index === 0,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons
@@ -377,6 +458,7 @@ const AppStack = () => {
         name="Favorite"
         component={FavoriteStack}
         options={({ route }) => ({
+          unmountOnBlur: true,
           tabBarVisible: getTabBarVisibility(route),
           // tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (

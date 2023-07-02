@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -17,9 +17,11 @@ import PostCard from '../components/PostCard';
 import storage from '@react-native-firebase/storage';
 import firestore from '@react-native-firebase/firestore';
 
-import {Container} from '../styles/FeedStyles';
+import { AuthContext } from '../navigation/AuthProvider';
+import { Container } from '../styles/FeedStyles';
 
-const HomeScreen = ({navigation}) => {
+const FavoriteScreen = ({ navigation }) => {
+  const { user, logout } = useContext(AuthContext);
   const [posts, setPosts] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleted, setDeleted] = useState(false);
@@ -27,6 +29,18 @@ const HomeScreen = ({navigation}) => {
   const fetchPosts = async () => {
     try {
       const list = [];
+      const favorites = [];
+
+      await firestore()
+        .collection('favorites')
+        .where('user', '==', user.uid)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            const { post } = doc.data();
+            favorites.push(post);
+          })
+        })
 
       await firestore()
         .collection('posts')
@@ -34,38 +48,39 @@ const HomeScreen = ({navigation}) => {
         .get()
         .then((querySnapshot) => {
           // console.log('Total Posts: ', querySnapshot.size);
-
           querySnapshot.forEach(async (doc) => {
-            const {
-              userId,
-              catalog,
-              location,
-              day,
-              postImg,
-              postTime,
-              recipient,
-              text,
-              time,
-              title,
-              likes,
-              comments,
-            } = doc.data();
-            list.push({
-              id: doc.id,
-              userId,
-              catalog,
-              location,
-              day,
-              postTime,
-              postImg,
-              liked: false,
-              likes,
-              comments,
-              recipient,
-              text,
-              title,
-              time
-            });
+            if (favorites.includes(doc.id)) {
+              const {
+                userId,
+                catalog,
+                location,
+                day,
+                postImg,
+                postTime,
+                recipient,
+                text,
+                time,
+                title,
+                likes,
+                comments,
+              } = doc.data();
+              list.push({
+                id: doc.id,
+                userId,
+                catalog,
+                location,
+                day,
+                postTime,
+                postImg,
+                liked: false,
+                likes,
+                comments,
+                recipient,
+                text,
+                title,
+                time
+              });
+            }
           });
         });
 
@@ -80,14 +95,6 @@ const HomeScreen = ({navigation}) => {
       console.log(e);
     }
   };
-
-  useEffect(() => {
-      const focusHandler = navigation.addListener('focus', () => {
-        console.log('mainscreen focused');
-        fetchPosts();
-      });
-      return focusHandler;
-  }, [navigation]);
 
   useEffect(() => {
     fetchPosts();
@@ -113,7 +120,7 @@ const HomeScreen = ({navigation}) => {
           onPress: () => deletePost(postId),
         },
       ],
-      {cancelable: false},
+      { cancelable: false },
     );
   };
 
@@ -126,7 +133,7 @@ const HomeScreen = ({navigation}) => {
       .get()
       .then((documentSnapshot) => {
         if (documentSnapshot.exists) {
-          const {postImg} = documentSnapshot.data();
+          const { postImg } = documentSnapshot.data();
 
           if (postImg != null) {
             const storageRef = storage().refFromURL(postImg);
@@ -168,63 +175,63 @@ const HomeScreen = ({navigation}) => {
     return null;
   };
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{ flex: 1 }}>
       {loading ? (
         <ScrollView
-          style={{flex: 1}}
-          contentContainerStyle={{alignItems: 'center'}}>
+          style={{ flex: 1 }}
+          contentContainerStyle={{ alignItems: 'center' }}>
           <SkeletonPlaceholder>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <View style={{width: 60, height: 60, borderRadius: 50}} />
-              <View style={{marginLeft: 20}}>
-                <View style={{width: 120, height: 20, borderRadius: 4}} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ width: 60, height: 60, borderRadius: 50 }} />
+              <View style={{ marginLeft: 20 }}>
+                <View style={{ width: 120, height: 20, borderRadius: 4 }} />
                 <View
-                  style={{marginTop: 6, width: 80, height: 20, borderRadius: 4}}
+                  style={{ marginTop: 6, width: 80, height: 20, borderRadius: 4 }}
                 />
               </View>
             </View>
-            <View style={{marginTop: 10, marginBottom: 30}}>
-              <View style={{width: 300, height: 20, borderRadius: 4}} />
+            <View style={{ marginTop: 10, marginBottom: 30 }}>
+              <View style={{ width: 300, height: 20, borderRadius: 4 }} />
               <View
-                style={{marginTop: 6, width: 250, height: 20, borderRadius: 4}}
+                style={{ marginTop: 6, width: 250, height: 20, borderRadius: 4 }}
               />
               <View
-                style={{marginTop: 6, width: 350, height: 200, borderRadius: 4}}
+                style={{ marginTop: 6, width: 350, height: 200, borderRadius: 4 }}
               />
             </View>
           </SkeletonPlaceholder>
           <SkeletonPlaceholder>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <View style={{width: 60, height: 60, borderRadius: 50}} />
-              <View style={{marginLeft: 20}}>
-                <View style={{width: 120, height: 20, borderRadius: 4}} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ width: 60, height: 60, borderRadius: 50 }} />
+              <View style={{ marginLeft: 20 }}>
+                <View style={{ width: 120, height: 20, borderRadius: 4 }} />
                 <View
-                  style={{marginTop: 6, width: 80, height: 20, borderRadius: 4}}
+                  style={{ marginTop: 6, width: 80, height: 20, borderRadius: 4 }}
                 />
               </View>
             </View>
-            <View style={{marginTop: 10, marginBottom: 30}}>
-              <View style={{width: 300, height: 20, borderRadius: 4}} />
+            <View style={{ marginTop: 10, marginBottom: 30 }}>
+              <View style={{ width: 300, height: 20, borderRadius: 4 }} />
               <View
-                style={{marginTop: 6, width: 250, height: 20, borderRadius: 4}}
+                style={{ marginTop: 6, width: 250, height: 20, borderRadius: 4 }}
               />
               <View
-                style={{marginTop: 6, width: 350, height: 200, borderRadius: 4}}
+                style={{ marginTop: 6, width: 350, height: 200, borderRadius: 4 }}
               />
             </View>
           </SkeletonPlaceholder>
         </ScrollView>
       ) : (
         <Container>
-          <FlatList 
+          <FlatList
             data={posts}
-            style={{width: '100%'}}
-            renderItem={({item}) => (
+            style={{ width: '100%' }}
+            renderItem={({ item }) => (
               <PostCard
                 item={item}
                 onDelete={handleDelete}
                 onPress={() =>
-                  navigation.navigate('HomeProfile', {userId: item.userId})
+                  navigation.navigate('HomeProfile', { userId: item.userId })
                 }
               />
             )}
@@ -239,4 +246,4 @@ const HomeScreen = ({navigation}) => {
   );
 };
 
-export default HomeScreen;
+export default FavoriteScreen;

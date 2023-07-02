@@ -26,13 +26,14 @@ import moment from 'moment';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import firestore from '@react-native-firebase/firestore';
 import { ScrollView, Text, View } from 'react-native';
+import QuickReplies from 'react-native-gifted-chat/lib/QuickReplies';
 
 const PostCard = ({ item, onDelete, onPress }) => {
   const { user, logout } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
 
-  likeIcon = item.liked ? 'heart' : 'heart-outline';
-  likeIconColor = item.liked ? '#2e64e5' : '#333';
+  const [favorite, setFavorite] = useState(false);
+  const [likes, setLikes] = useState(0);
 
   if (item.likes == 1) {
     likeText = '1 Like';
@@ -61,11 +62,74 @@ const PostCard = ({ item, onDelete, onPress }) => {
           setUserData(documentSnapshot.data());
         }
       });
+
+    await firestore()
+      .collection('favorites')
+      .where('post', '==', item.id)
+      .get()
+      .then((querySnapshot) => {
+        setLikes(querySnapshot.docs.length);
+        setFavorite(false);
+        querySnapshot.forEach((doc) => {
+          const { user: _user } = doc.data();
+          if (_user === user.uid) {
+            setFavorite(true);
+          }
+        });
+      })
   };
 
   useEffect(() => {
     getUser();
   }, []);
+
+  const toggleFavorite = async () => {
+    console.log('toggle favorite', favorite);
+    if (favorite) {
+      await firestore()
+        .collection('favorites')
+        .where('post', '==', item.id)
+        .where('user', '==', user.uid)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.docs[0].ref.delete();
+        })
+        .catch((error) => {
+          console.log('Something went wrong with delete from favorite on firestore.', error);
+        });
+    } else {
+      await firestore()
+        .collection('favorites')
+        .add({
+          post: item.id,
+          user: user.uid
+        })
+        .catch((error) => {
+          console.log('Something went wrong with delete from favorite on firestore.', error);
+        });
+    }
+
+    await firestore()
+      .collection('favorites')
+      .where('post', '==', item.id)
+      .get()
+      .then((querySnapshot) => {
+        setLikes(querySnapshot.docs.length);
+        setFavorite(false);
+        querySnapshot.forEach(async (doc) => {
+          const { user } = doc.data();
+          console.log()
+          if (user === user.uid) {
+            setFavorite(true);
+          }
+        });
+      })
+    setFavorite(!favorite);
+  }
+
+  const sendComment = () => {
+
+  }
 
   return (
     <Card key={item.id}>
@@ -104,11 +168,11 @@ const PostCard = ({ item, onDelete, onPress }) => {
       <PostInfoView>
         <PostTime>{moment(item.postTime.toDate()).fromNow()}</PostTime>
         <InteractionWrapper>
-          <Interaction active={item.liked}>
-            <InteractionText active={item.liked}>{!item.likes ? 0 : item.likes}</InteractionText>
-            <Ionicons name={likeIcon} size={20} color={likeIconColor} />
+          <Interaction active={favorite} onPress={() => { toggleFavorite() }}>
+            <InteractionText active={favorite}>{!likes ? 0 : likes}</InteractionText>
+            <Ionicons name={favorite ? 'heart' : 'heart-outline'} size={20} color={favorite ? '#2e64e5' : '#333'} />
           </Interaction>
-          <Interaction>
+          <Interaction onPress={() => { sendComment() }}>
             <InteractionText>{!item.comments ? 0 : item.comments}</InteractionText>
             <Ionicons name="md-chatbubble-outline" size={20} />
           </Interaction>
